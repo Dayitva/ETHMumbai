@@ -13,11 +13,13 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * 
  * @author Formula Zero
  */
-contract TinyDex {
+contract TinyRaise {
     // State Variables
-    mapping(address => uint256) public tokenCaps;
+    address public owner;
+    uint256 public raiseAmount;
+    address public raiseToken;
+    mapping(address => bool) public allowedTokens;
     mapping(address => uint256) public tokenBalances;
-    mapping(address => mapping(address => uint256)) public userTokenBalances;
 
     event SwapExecuted(
         address indexed swapExecutor,
@@ -28,18 +30,19 @@ contract TinyDex {
     );
 
     event DepositMade(
-        address indexed owner, 
+        address indexed depositor, 
         address indexed token, 
         uint256 amount
     );
 
-    // Constructor: Called once on contract deployment
     // Check packages/foundry/deploy/Deploy.s.sol
-    constructor(address _owner) {
+    constructor(address _owner, uint256 _raiseAmount, address _raiseToken, address[] memory _allowedTokens) {
         owner = _owner;
-        tokenCaps[address(USDC)] = 1000;
-        tokenCaps[address(USDT)] = 1000;
-        tokenCaps[address(DAI)] = 1000;
+        raiseAmount = _raiseAmount;
+        raiseToken = _raiseToken;
+        for (uint256 i = 0; i < _allowedTokens.length; i++) {
+            allowedTokens[_allowedTokens[i]] = true;
+        }
     }
 
     // Modifier: used to define a set of rules that must be met before or after a function is executed
@@ -50,12 +53,9 @@ contract TinyDex {
         _;
     }
 
-    function updateCaps(address _token, uint256 _amount) onlyOwner public {
-        tokenCaps[_token] = 1000;
-    }
-
     function deposit(address token, uint256 _amount, Permit calldata _signature) public {
         require(_amount > 0, "Amount must be greater than 0");
+        require(allowedTokens[token], "Token not allowed");
         
         IERC20Permit(token).permit(
             _signature.owner,
@@ -70,24 +70,21 @@ contract TinyDex {
         IERC20(token).safeTransferFrom(_signature.owner, address(this), _amount);
     
         tokenBalances[token] += _amount;
-        userTokenBalances[_signature.owner][token] += _amount;
 
         emit DepositMade(_signature.owner, token, _amount);
     }
 
-    function swap(address token) public {
-        require(tokenBalances[token] >= tokenCaps[token], "Cap not reached yet");
-
+    function swap(address _token) public {
         // Swap logic here ...
+        // ETH = UniswapSWAP(_tokenFrom, _tokenTo, tokenBalances[_tokenFrom]);
+        
+        tokenBalances[_token] = 0;
 
-        tokenBalances[token] = 0;
+        emit SwapExecuted(msg.sender, _token, raiseToken, _amount, _amount);
+    }
 
-        for (uint256 i = 0; i < tokenBalances[token]; i++) {
-            userTokenBalances[msg.sender][token] = 0;
-            IERC20(token).safeTransferFrom(address(this), _signature.owner, _amount);
-        }
-
-        emit SwapExecuted(msg.sender, token, address(USDC), _amount, _amount);
+    function withdraw() onlyOwner public {
+        IERC20(raiseToken).safeTransfer(owner, balance(this));
     }
 
     /**
