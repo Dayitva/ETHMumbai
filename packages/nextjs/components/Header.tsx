@@ -26,6 +26,11 @@ export const menuLinks: HeaderMenuLink[] = [
   },
 
   {
+    label: "Deposit",
+    href: "/deposit",
+  },
+
+  {
     label: "Raise",
     href: "/raise",
   },

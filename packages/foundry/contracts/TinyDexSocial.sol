@@ -53,7 +53,7 @@ contract TinyDex {
     }
 
     function updateCaps(address _token, uint256 _amount) onlyOwner public {
-        tokenCaps[_token] = 1000;
+        tokenCaps[_token] = _amount;
     }
 
     function deposit(address token, uint256 _amount, Permit calldata _signature) public {

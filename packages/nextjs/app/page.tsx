@@ -76,6 +76,7 @@ const Home: NextPage = () => {
               type="text"
               value={fromInputValue}
               onChange={handleInputChange}
+              placeholder="Amount"
               style={{
                 border: "2px solid black",
                 padding: "8px",
@@ -135,6 +136,7 @@ const Home: NextPage = () => {
               type="text"
               value={toOutputValue}
               onChange={handleOutputChange}
+              placeholder="Amount"
               style={{
                 border: "2px solid black",
                 padding: "8px",
