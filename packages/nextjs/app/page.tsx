@@ -1,68 +1,181 @@
 "use client";
 
-import Link from "next/link";
+import React, { useState } from "react";
 import type { NextPage } from "next";
-import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { Address } from "~~/components/scaffold-eth";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+  // const networks = [
+  //   chains.mainnet,
+  //   chains.goerli,
+  //   chains.polygon,
+  //   chains.gnosis,
+  //   chains.bsc,
+  //   chains.arbitrum,
+  //   chains.optimism,
+  //   chains.avalanche,
+  //   chains.aurora,
+  //   chains.base,
+  //   chains.baseGoerli,
+  //   chains.polygonZkEvm,
+  //   chains.zkSync,
+  // ];
+
+  const tokens = ["USDC", "USDT", "DAI", "BUSD", "GHO"];
+
+  const [fromInputValue, setFromInputValue] = useState("");
+  const [toOutputValue, setToOutputValue] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isOutputDropdownOpen, setIsOutputDropdownOpen] = useState(false);
+  const [inputSelectedToken, setInputSelectedToken] = useState(tokens[0]);
+  const [outputSelectedToken, setOutputSelectedToken] = useState(tokens[0]);
+
+  const handleInputChange = (e: any) => {
+    setFromInputValue(e.target.value);
+  };
+
+  const handleOutputChange = (f: any) => {
+    setToOutputValue(f.target.value);
+  };
+
+  const handleInputToggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleOutputToggleDropdown = () => {
+    setIsOutputDropdownOpen(!isOutputDropdownOpen);
+  };
+
+  const handleInputSelectToken = (option: string) => {
+    setInputSelectedToken(option);
+    setIsDropdownOpen(false);
+  };
+
+  const handleOutputSelectToken = (option: string) => {
+    setOutputSelectedToken(option);
+    setIsOutputDropdownOpen(false);
+  };
+
+  function swap() {
+    console.log("swap");
+  }
 
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
         <div className="px-5">
           <h1 className="text-center">
-            <span className="block text-2xl mb-2">Welcome to</span>
-            <span className="block text-4xl font-bold">Scaffold-ETH 2</span>
+            <span className="block text-8xl mb-16 mt-32 font-bold">Tiny DEX</span>
+            <p className="py-8">Swap gaslessly</p>
           </h1>
-          <div className="flex justify-center items-center space-x-2">
-            <p className="my-2 font-medium">Connected Address:</p>
-            <Address address={connectedAddress} />
-          </div>
-          <p className="text-center text-lg">
-            Get started by editing{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/nextjs/app/page.tsx
-            </code>
-          </p>
-          <p className="text-center text-lg">
-            Edit your smart contract{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              YourContract.sol
-            </code>{" "}
-            in{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/hardhat/contracts
-            </code>
-          </p>
         </div>
 
-        <div className="flex-grow bg-base-300 w-full mt-16 px-8 py-12">
-          <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <BugAntIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Tinker with your smart contract using the{" "}
-                <Link href="/debug" passHref className="link">
-                  Debug Contracts
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <MagnifyingGlassIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Explore your local transactions with the{" "}
-                <Link href="/blockexplorer" passHref className="link">
-                  Block Explorer
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
+        <div className="flex items-center mb-1 ">
+          <div className="flex-none w-2/1 mr-4">
+            <input
+              type="text"
+              value={fromInputValue}
+              onChange={handleInputChange}
+              style={{
+                border: "2px solid black",
+                padding: "8px",
+                borderRadius: "10px",
+                width: "100%",
+              }}
+            />
+          </div>
+          <div className="dropdown dropdown-bottom w-2/6 flex-none z-10 relative">
+            <label
+              tabIndex={0}
+              className="btn btn-neutral btn-md dropdown-toggle gap-1"
+              onClick={handleInputToggleDropdown}
+            >
+              <span>{inputSelectedToken}</span> <ChevronDownIcon className="h-6 w-4 ml-2 sm:ml-0" />
+            </label>
+            {isDropdownOpen && (
+              <ul
+                tabIndex={0}
+                className="dropdown-content menu p-2 mt-1 shadow-center shadow-accent bg-base-200 rounded-box gap-1 absolute"
+                style={{ maxHeight: "200px", overflowY: "auto", left: 0, right: 0, zIndex: 10 }} // Set zIndex to 10
+              >
+                {tokens.map((option: any) => (
+                  <li key={option}>
+                    <button
+                      className="btn-sm !rounded-xl flex py-3 gap-6"
+                      type="button"
+                      onClick={() => handleInputSelectToken(option)}
+                    >
+                      {option}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
+
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="30"
+          height="30"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#222222"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <polyline points="19 12 12 19 5 12"></polyline>
+        </svg>
+
+        <div className="flex items-center mb-9">
+          <div className="flex-none w-2/1 mr-4">
+            <input
+              type="text"
+              value={toOutputValue}
+              onChange={handleOutputChange}
+              style={{
+                border: "2px solid black",
+                padding: "8px",
+                borderRadius: "10px",
+                width: "100%",
+              }}
+            />
+          </div>
+          <div className="dropdown dropdown-bottom w-2/6 flex-none relative">
+            <label
+              tabIndex={0}
+              className="btn btn-neutral btn-md dropdown-toggle gap-1"
+              onClick={handleOutputToggleDropdown}
+            >
+              <span>{outputSelectedToken}</span> <ChevronDownIcon className="h-6 w-4 ml-2 sm:ml-0" />
+            </label>
+            {isOutputDropdownOpen && (
+              <ul
+                tabIndex={0}
+                className="dropdown-content menu p-2 mt-1 shadow-center shadow-accent bg-base-200 rounded-box gap-1 absolute"
+                style={{ maxHeight: "200px", overflowY: "auto" }}
+              >
+                {tokens.map((option: any) => (
+                  <li key={option}>
+                    <button
+                      className="btn-sm !rounded-xl flex py-3 gap-6"
+                      type="button"
+                      onClick={() => handleOutputSelectToken(option)}
+                    >
+                      {option}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <button className="btn btn-primary w-1/6" onClick={() => swap()}>
+          Swap
+        </button>
       </div>
     </>
   );
