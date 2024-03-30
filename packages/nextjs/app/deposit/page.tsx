@@ -2,14 +2,25 @@
 
 import React, { useState } from "react";
 import type { NextPage } from "next";
+import { parseEther } from "viem";
+import { useAccount } from "wagmi";
+import { useSignTypedData } from "wagmi";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth/useScaffoldContractWrite";
+import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 
 const Deposit: NextPage = () => {
   const tokens = ["USDC", "USDT", "DAI", "BUSD", "GHO"];
 
+  const { address: connectedAddress } = useAccount();
+  const { targetNetwork } = useTargetNetwork();
+
   const [fromInputValue, setFromInputValue] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [inputSelectedToken, setInputSelectedToken] = useState(tokens[0]);
+  const [inputSelectedToken, setInputSelectedToken] = useState("USDC");
+  const [v, setV] = useState(0);
+  const [r, setR] = useState("");
+  const [s, setS] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromInputValue(e.target.value);
@@ -24,17 +35,88 @@ const Deposit: NextPage = () => {
     setIsDropdownOpen(false);
   };
 
-  function swap() {
-    console.log("swap");
+  const { data, isError, isSuccess, signTypedData } = useSignTypedData({
+    types: {
+      EIP712Domain: [
+        {
+          name: "name",
+          type: "string",
+        },
+        {
+          name: "version",
+          type: "string",
+        },
+        {
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          name: "verifyingContract",
+          type: "address",
+        },
+      ],
+      Permit: [
+        { name: "owner", type: "address" },
+        { name: "spender", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+      ],
+    },
+    domain: {
+      name: "ERC20Token",
+      version: "1",
+      chainId: targetNetwork.id,
+      verifyingContract: "0xf527BA160517967dAf7EeB844Ee2b56902Baf5F1",
+    },
+    primaryType: "Permit",
+    message: {
+      owner: connectedAddress,
+      spender: "0xf527BA160517967dAf7EeB844Ee2b56902Baf5F1",
+      value: "100000000000000000000",
+      nonce: 1,
+      deadline: Math.trunc((Date.now() + 120 * 1000) / 1000), // future timestamp
+    },
+  });
+
+  const { writeAsync } = useScaffoldContractWrite({
+    contractName: "TinyDexRaise",
+    functionName: "deposit",
+    args: [
+      "0xf527BA160517967dAf7EeB844Ee2b56902Baf5F1",
+      100000000000000000000,
+      Math.trunc((Date.now() + 120 * 1000) / 1000),
+      v,
+      r,
+      s,
+    ],
+    value: parseEther("0"),
+    blockConfirmations: 1,
+    onBlockConfirmation: txnReceipt => {
+      console.log("Transaction blockHash", txnReceipt.blockHash);
+    },
+  });
+
+  async function deposit(data: any) {
+    const signature = data.substring(2);
+    const r = "0x" + signature.substring(0, 64);
+    const s = "0x" + signature.substring(64, 128);
+    const v = parseInt(signature.substring(128, 130), 16);
+    console.log({ r, s, v });
+    await setV(v);
+    await setR(r);
+    await setS(s);
+
+    writeAsync();
   }
 
   return (
     <>
-      <div className="flex items-center flex-col flex-grow pt-10">
+      <div className="flex items-center flex-col flex-grow">
         <div className="px-5">
           <h1 className="text-center">
-            <span className="block text-8xl mb-16 mt-32 font-bold">Tiny DEX</span>
-            <p className="py-8">Swap gaslessly</p>
+            <span className="block text-8xl mb-16 mt-32 font-bold">TinyRaise</span>
+            <p className="py-0">Bootstrap liquidity gaslessly</p>
           </h1>
         </div>
 
@@ -82,9 +164,14 @@ const Deposit: NextPage = () => {
             )}
           </div>
         </div>
-        <button className="btn btn-primary w-1/6 mt-5" onClick={swap}>
-          Swap
+        <button className="btn btn-primary w-1/6 mt-5" onClick={() => deposit(data)}>
+          Deposit
         </button>
+        <button className="btn btn-primary w-1/6 mt-5" onClick={() => signTypedData()}>
+          Sign
+        </button>
+        {isSuccess && <div>Signature: {data}</div>}
+        {isError && <div>Error signing message</div>}
       </div>
     </>
   );

@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * 
  * @author Formula Zero
  */
-contract TinyDex {
+contract TinyDexGeneral {
     // State Variables
     address public owner;
     mapping(address => mapping(address => uint256)) public tokenCaps;
@@ -37,11 +37,15 @@ contract TinyDex {
         uint256 amount
     );
 
+    event CapReached(
+        address indexed tokenFrom,
+        address indexed tokenTo
+    );
+
     // Constructor: Called once on contract deployment
     // Check packages/foundry/deploy/Deploy.s.sol
     constructor(address _owner) {
         owner = _owner;
-        tokenCaps[address(USDC)][address(ETH)] = 1000;
     }
 
     // Modifier: used to define a set of rules that must be met before or after a function is executed
@@ -56,26 +60,26 @@ contract TinyDex {
         tokenCaps[_tokenFrom][_tokenTo] = _newTokenCap;
     }
 
-    function deposit(address _tokenFrom, address _tokenTo, uint256 _amount, Permit calldata _signature) public {
+    function deposit(address token, uint256 _amount, uint256 _deadline, uint8 v, bytes32 r, bytes32 s) public {
         require(_amount > 0, "Amount must be greater than 0");
         
         IERC20Permit(token).permit(
-            _signature.owner,
+            msg.sender,
             address(this),
-            _signature.amount,
-            _signature.deadline,
-            _signature.v,
-            _signature.r,
-            _signature.s
+            _amount,
+            _deadline,
+            v,
+            r,
+            s
         );
 
-        IERC20(token).safeTransferFrom(_signature.owner, address(this), _amount);
+        // IERC20(token).transferFrom(msg.sender, address(this), _amount);
     
-        tokenBalances[_tokenFrom][_tokenTo] += _amount;
-        userTokenBalances[_signature.owner][_tokenFrom][_tokenTo] += _amount;
-        tokenToUsers[_tokenFrom][_tokenTo].push(_signature.owner);
+        // tokenBalances[token] += _amount;
+        // userTokenBalances[msg.sender][token] += _amount;
+        // tokenToUsers[token].push(msg.sender);
 
-        emit DepositMade(_signature.owner, _tokenFrom, _tokenTo, _amount);
+        // emit DepositMade(msg.sender, token, _amount);
     }
 
     function swap(address _tokenFrom, address _tokenTo) public {
@@ -86,13 +90,13 @@ contract TinyDex {
 
         tokenBalances[_tokenFrom][_tokenTo] = 0;
 
-        for (uint256 i = 0; i < tokenToUsers[_tokenFrom][_tokenTo].length; i++) {
-            uint256 amount = amount * (100 * userTokenBalances[tokenToUsers[_tokenFrom][_tokenTo][i]][_tokenFrom][_tokenTo]) / tokenCaps[_tokenFrom][_tokenTo];
-            IERC20(_tokenTo).safeTransferFrom(address(this), tokenToUsers[_tokenFrom][_tokenTo][i], _amount);
-            userTokenBalances[tokenToUsers[_tokenFrom][_tokenTo][i]][_tokenFrom][_tokenTo] = 0;
-        }
+        // for (uint256 i = 0; i < tokenToUsers[_tokenFrom][_tokenTo].length; i++) {
+        //     uint256 amount = amount * (100 * userTokenBalances[tokenToUsers[_tokenFrom][_tokenTo][i]][_tokenFrom][_tokenTo]) / tokenCaps[_tokenFrom][_tokenTo];
+        //     IERC20(_tokenTo).safeTransferFrom(address(this), tokenToUsers[_tokenFrom][_tokenTo][i], _amount);
+        //     userTokenBalances[tokenToUsers[_tokenFrom][_tokenTo][i]][_tokenFrom][_tokenTo] = 0;
+        // }
 
-        emit SwapExecuted(msg.sender, token, address(USDC), _amount, _amount);
+        // emit SwapExecuted(msg.sender, token, address(USDC), _amount, _amount);
     }
 
     /**

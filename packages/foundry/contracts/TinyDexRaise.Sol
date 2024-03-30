@@ -5,6 +5,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+// import { ChainId, Token } from '@uniswap/sdk-core';
+// import { Pair, Trade, Route } from '@uniswap/v2-sdk';
 
 // Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
@@ -13,7 +15,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * 
  * @author Formula Zero
  */
-contract TinyRaise {
+contract TinyDexRaise {
     // State Variables
     address public owner;
     uint256 public raiseAmount;
@@ -53,38 +55,35 @@ contract TinyRaise {
         _;
     }
 
-    function deposit(address token, uint256 _amount, Permit calldata _signature) public {
+    function deposit(address token, uint256 _amount, uint256 _deadline, uint8 v, bytes32 r, bytes32 s) public {
         require(_amount > 0, "Amount must be greater than 0");
-        require(allowedTokens[token], "Token not allowed");
         
         IERC20Permit(token).permit(
-            _signature.owner,
+            msg.sender,
             address(this),
-            _signature.amount,
-            _signature.deadline,
-            _signature.v,
-            _signature.r,
-            _signature.s
+            _amount,
+            _deadline,
+            v,
+            r,
+            s
         );
 
-        IERC20(token).safeTransferFrom(_signature.owner, address(this), _amount);
-    
-        tokenBalances[token] += _amount;
+        IERC20(token).transferFrom(msg.sender, address(this), _amount);
 
-        emit DepositMade(_signature.owner, token, _amount);
+        emit DepositMade(msg.sender, token, _amount);
     }
 
     function swap(address _token) public {
         // Swap logic here ...
         // ETH = UniswapSWAP(_tokenFrom, _tokenTo, tokenBalances[_tokenFrom]);
-        
+        uint256 _amount = tokenBalances[_token];
         tokenBalances[_token] = 0;
 
-        emit SwapExecuted(msg.sender, _token, raiseToken, _amount, _amount);
+        emit SwapExecuted(msg.sender, _token, raiseToken, _amount, 100);
     }
 
     function withdraw() onlyOwner public {
-        IERC20(raiseToken).safeTransfer(owner, balance(this));
+        IERC20(raiseToken).transfer(owner, raiseAmount);
     }
 
     /**

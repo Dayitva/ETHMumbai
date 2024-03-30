@@ -1,7 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../contracts/YourContract.sol";
+// import "../contracts/TinyDexGeneral.sol";
+// import "../contracts/TinyDexSocial.sol";
+import "../contracts/TinyDexRaise.sol";
 import "./DeployHelpers.s.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
@@ -15,11 +17,11 @@ contract DeployScript is ScaffoldETHDeploy {
             );
         }
         vm.startBroadcast(deployerPrivateKey);
-        YourContract yourContract =
-            new YourContract(vm.addr(deployerPrivateKey));
+        TinyDexRaise yourContract =
+            new TinyDexRaise(vm.addr(deployerPrivateKey), 10, vm.addr(deployerPrivateKey), new address[](0));
         console.logString(
             string.concat(
-                "YourContract deployed at: ", vm.toString(address(yourContract))
+                "TineyDexRaise deployed at: ", vm.toString(address(yourContract))
             )
         );
         vm.stopBroadcast();

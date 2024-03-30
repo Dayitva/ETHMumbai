@@ -5,22 +5,6 @@ import type { NextPage } from "next";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 const Home: NextPage = () => {
-  // const networks = [
-  //   chains.mainnet,
-  //   chains.goerli,
-  //   chains.polygon,
-  //   chains.gnosis,
-  //   chains.bsc,
-  //   chains.arbitrum,
-  //   chains.optimism,
-  //   chains.avalanche,
-  //   chains.aurora,
-  //   chains.base,
-  //   chains.baseGoerli,
-  //   chains.polygonZkEvm,
-  //   chains.zkSync,
-  // ];
-
   const tokens = ["USDC", "USDT", "DAI", "BUSD", "GHO"];
 
   const [fromInputValue, setFromInputValue] = useState("");

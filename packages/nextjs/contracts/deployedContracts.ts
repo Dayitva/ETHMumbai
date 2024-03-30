@@ -6,8 +6,8 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
   31337: {
-    YourContract: {
-      address: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
+    TinyDexRaise: {
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       abi: [
         {
           inputs: [
@@ -15,6 +15,21 @@ const deployedContracts = {
               internalType: "address",
               name: "_owner",
               type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_raiseAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_raiseToken",
+              type: "address",
+            },
+            {
+              internalType: "address[]",
+              name: "_allowedTokens",
+              type: "address[]",
             },
           ],
           stateMutability: "nonpayable",
@@ -26,34 +41,71 @@ const deployedContracts = {
             {
               indexed: true,
               internalType: "address",
-              name: "greetingSetter",
+              name: "depositor",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "token",
               type: "address",
             },
             {
               indexed: false,
-              internalType: "string",
-              name: "newGreeting",
-              type: "string",
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "DepositMade",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "swapExecutor",
+              type: "address",
             },
             {
               indexed: false,
-              internalType: "bool",
-              name: "premium",
-              type: "bool",
+              internalType: "address",
+              name: "tokenFrom",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "tokenTo",
+              type: "address",
             },
             {
               indexed: false,
               internalType: "uint256",
-              name: "value",
+              name: "valueFrom",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "valueTo",
               type: "uint256",
             },
           ],
-          name: "GreetingChange",
+          name: "SwapExecuted",
           type: "event",
         },
         {
-          inputs: [],
-          name: "checked",
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "allowedTokens",
           outputs: [
             {
               internalType: "bool",
@@ -65,16 +117,41 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
-          name: "greeting",
-          outputs: [
+          inputs: [
             {
-              internalType: "string",
-              name: "",
-              type: "string",
+              internalType: "address",
+              name: "token",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_amount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_deadline",
+              type: "uint256",
+            },
+            {
+              internalType: "uint8",
+              name: "v",
+              type: "uint8",
+            },
+            {
+              internalType: "bytes32",
+              name: "r",
+              type: "bytes32",
+            },
+            {
+              internalType: "bytes32",
+              name: "s",
+              type: "bytes32",
             },
           ],
-          stateMutability: "view",
+          name: "deposit",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -92,12 +169,25 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "premium",
+          name: "raiseAmount",
           outputs: [
             {
-              internalType: "bool",
+              internalType: "uint256",
               name: "",
-              type: "bool",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "raiseToken",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
             },
           ],
           stateMutability: "view",
@@ -106,40 +196,14 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "string",
-              name: "_newGreeting",
-              type: "string",
+              internalType: "address",
+              name: "_token",
+              type: "address",
             },
           ],
-          name: "setGreeting",
+          name: "swap",
           outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "test",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "totalCounter",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -150,7 +214,7 @@ const deployedContracts = {
               type: "address",
             },
           ],
-          name: "userGreetingCounter",
+          name: "tokenBalances",
           outputs: [
             {
               internalType: "uint256",
