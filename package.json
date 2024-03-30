@@ -44,6 +44,11 @@
   },
   "packageManager": "yarn@3.2.3",
   "dependencies": {
+    "@aave/contract-helpers": "^1.28.0",
+    "@bgd-labs/aave-address-book": "^2.25.0",
+    "bignumber.js": "^9.1.2",
+    "ethers": "5",
+    "reflect-metadata": "^0.2.2",
     "web3": "^4.7.0"
   }
 }

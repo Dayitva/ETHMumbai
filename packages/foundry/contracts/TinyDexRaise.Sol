@@ -20,8 +20,9 @@ contract TinyDexRaise {
     address public owner;
     uint256 public raiseAmount;
     address public raiseToken;
-    mapping(address => bool) public allowedTokens;
     mapping(address => uint256) public tokenBalances;
+
+    IUniswapV2Router private router = IUniswapV2Router(UNISWAP_V2_ROUTER);
 
     event SwapExecuted(
         address indexed swapExecutor,
@@ -38,13 +39,10 @@ contract TinyDexRaise {
     );
 
     // Check packages/foundry/deploy/Deploy.s.sol
-    constructor(address _owner, uint256 _raiseAmount, address _raiseToken, address[] memory _allowedTokens) {
+    constructor(address _owner, uint256 _raiseAmount, address _raiseToken) {
         owner = _owner;
         raiseAmount = _raiseAmount;
         raiseToken = _raiseToken;
-        for (uint256 i = 0; i < _allowedTokens.length; i++) {
-            allowedTokens[_allowedTokens[i]] = true;
-        }
     }
 
     // Modifier: used to define a set of rules that must be met before or after a function is executed

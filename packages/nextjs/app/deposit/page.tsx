@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { EthereumTransactionTypeExtended, Pool } from "@aave/contract-helpers";
+import * as markets from "@bgd-labs/aave-address-book";
+import { ethers } from "ethers";
 import type { NextPage } from "next";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
@@ -10,7 +13,30 @@ import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth/useScaffoldContr
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 
 const Deposit: NextPage = () => {
-  const tokens = ["USDC", "USDT", "DAI", "BUSD", "GHO"];
+  const tokens = ["USDC", "USDT", "GHO", "DAI"];
+
+  const GHO_SEPOLIA = markets.AaveV3Sepolia.ASSETS.GHO.UNDERLYING;
+  const DAI_SEPOLIA = markets.AaveV3Sepolia.ASSETS.DAI.UNDERLYING;
+  const USDC_SEPOLIA = markets.AaveV3Sepolia.ASSETS.USDC.UNDERLYING;
+  const USDT_SEPOLIA = markets.AaveV3Sepolia.ASSETS.USDT.UNDERLYING;
+
+  const nameToReserve = {
+    GHO: GHO_SEPOLIA,
+    DAI: DAI_SEPOLIA,
+    USDC: USDC_SEPOLIA,
+    USDT: USDT_SEPOLIA,
+  };
+
+  const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+
+  const AAVE_POOL_SEPOLIA = markets.AaveV3Sepolia.POOL;
+  const WETH_GATEWAY_SEPOLIA = markets.AaveV3Sepolia.WETH_GATEWAY;
+
+  const DEADLINE = Math.floor(Date.now() / 1000 + 3600).toString();
+
+  const PRIV_KEY = process.env.NEXT_PUBLIC_EXECUTOR_PRIV_KEY || "test";
+  const INFURA_ID = process.env.NEXT_PUBLIC_INFURA_ID || "test";
 
   const { address: connectedAddress } = useAccount();
   const { targetNetwork } = useTargetNetwork();
@@ -33,6 +59,90 @@ const Deposit: NextPage = () => {
   const handleInputSelectToken = (option: string) => {
     setInputSelectedToken(option);
     setIsDropdownOpen(false);
+  };
+
+  async function submitTransaction({ provider, tx }: { provider: any; tx: EthereumTransactionTypeExtended }) {
+    console.log(tx);
+    const extendedTxData = await tx.tx();
+    console.log(tx, extendedTxData);
+    const { from, ...txData } = extendedTxData;
+    // const signer = provider.getSigner(from);
+    console.log("From: ", from);
+    const txResponse = await provider.sendTransaction({
+      ...txData,
+      value: 0,
+    });
+    return txResponse;
+  }
+
+  async function approveAndSign({
+    pool,
+    provider,
+    address,
+    asset,
+    amount,
+  }: {
+    pool: any;
+    provider: ethers.providers.Web3Provider;
+    address: string;
+    asset: string;
+    amount: string;
+  }) {
+    const dataToSign = await pool.signERC20Approval({
+      user: address,
+      reserve: asset,
+      amount: amount,
+      deadline: DEADLINE,
+    });
+
+    console.log(dataToSign);
+
+    const signature = await provider.send("eth_signTypedData_v4", [address, dataToSign]);
+
+    console.log(signature);
+
+    return signature;
+  }
+
+  const supplyWithPermit = async (address: string, asset: string, amount: string) => {
+    const provider = new ethers.providers.Web3Provider((window as any).ethereum);
+
+    const pool = new Pool(provider, {
+      POOL: AAVE_POOL_SEPOLIA,
+      WETH_GATEWAY: WETH_GATEWAY_SEPOLIA,
+    });
+
+    const infura_provider = new ethers.providers.InfuraProvider("sepolia", INFURA_ID);
+
+    const wallet = new ethers.Wallet(PRIV_KEY, infura_provider);
+
+    console.log(provider);
+    console.log(pool);
+    console.log(wallet);
+
+    const signature = await approveAndSign({
+      pool: pool,
+      provider: provider,
+      address: address,
+      asset: asset,
+      amount: amount,
+    });
+
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    await wait(2000);
+    console.log("done");
+
+    const txs: EthereumTransactionTypeExtended[] = await pool.supplyWithPermit({
+      user: address,
+      reserve: asset,
+      amount: amount,
+      signature: signature,
+      onBehalfOf: "0x631088Af5A770Bee50FFA7dd5DC18994616DC1fF",
+      deadline: DEADLINE,
+    });
+
+    const txResponse = await submitTransaction({ provider: wallet, tx: txs[0] });
+    console.log(txResponse);
   };
 
   const { data, isError, isSuccess, signTypedData } = useSignTypedData({
@@ -67,29 +177,22 @@ const Deposit: NextPage = () => {
       name: "ERC20Token",
       version: "1",
       chainId: targetNetwork.id,
-      verifyingContract: "0xf527BA160517967dAf7EeB844Ee2b56902Baf5F1",
+      verifyingContract: tokenAddress,
     },
     primaryType: "Permit",
     message: {
       owner: connectedAddress,
-      spender: "0xf527BA160517967dAf7EeB844Ee2b56902Baf5F1",
-      value: "100000000000000000000",
+      spender: contractAddress,
+      value: fromInputValue,
       nonce: 1,
-      deadline: Math.trunc((Date.now() + 120 * 1000) / 1000), // future timestamp
+      deadline: DEADLINE,
     },
   });
 
   const { writeAsync } = useScaffoldContractWrite({
     contractName: "TinyDexRaise",
     functionName: "deposit",
-    args: [
-      "0xf527BA160517967dAf7EeB844Ee2b56902Baf5F1",
-      100000000000000000000,
-      Math.trunc((Date.now() + 120 * 1000) / 1000),
-      v,
-      r,
-      s,
-    ],
+    args: [tokenAddress, fromInputValue, DEADLINE, v, r, s],
     value: parseEther("0"),
     blockConfirmations: 1,
     onBlockConfirmation: txnReceipt => {
@@ -106,6 +209,9 @@ const Deposit: NextPage = () => {
     await setV(v);
     await setR(r);
     await setS(s);
+
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    await wait(2000);
 
     writeAsync();
   }
@@ -169,6 +275,12 @@ const Deposit: NextPage = () => {
         </button>
         <button className="btn btn-primary w-1/6 mt-5" onClick={() => signTypedData()}>
           Sign
+        </button>
+        <button
+          className="btn btn-primary w-1/6 mt-5"
+          onClick={() => supplyWithPermit(connectedAddress, nameToReserve[inputSelectedToken], fromInputValue)}
+        >
+          Supply
         </button>
         {isSuccess && <div>Signature: {data}</div>}
         {isError && <div>Error signing message</div>}

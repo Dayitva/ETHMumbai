@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 // import "../contracts/TinyDexGeneral.sol";
 // import "../contracts/TinyDexSocial.sol";
 import "../contracts/TinyDexRaise.sol";
+import "../contracts/ERC20Token.sol";
 import "./DeployHelpers.s.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
@@ -17,13 +18,22 @@ contract DeployScript is ScaffoldETHDeploy {
             );
         }
         vm.startBroadcast(deployerPrivateKey);
+        ERC20Token token =
+            new ERC20Token();
+        console.logString(
+            string.concat(
+                "Token deployed at: ", vm.toString(address(token))
+            )
+        );
+
         TinyDexRaise yourContract =
             new TinyDexRaise(vm.addr(deployerPrivateKey), 10, vm.addr(deployerPrivateKey), new address[](0));
         console.logString(
             string.concat(
-                "TineyDexRaise deployed at: ", vm.toString(address(yourContract))
+                "TinyDexRaise deployed at: ", vm.toString(address(yourContract))
             )
         );
+        token.mint(address(0xf527BA160517967dAf7EeB844Ee2b56902Baf5F1), 10000);
         vm.stopBroadcast();
 
         /**
