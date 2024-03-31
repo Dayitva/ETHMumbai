@@ -6,12 +6,14 @@ import * as markets from "@bgd-labs/aave-address-book";
 import { ethers } from "ethers";
 import type { NextPage } from "next";
 
+/* eslint-disable react-hooks/rules-of-hooks */
+
 const RaiseDashboard: NextPage = () => {
   const tokens = Object.keys(markets.AaveV3Sepolia.ASSETS);
   // const tokenBalances = [];
 
   // const [userReserves, setUserReserves] = useState({});
-  const [tokenBalances, setTokenBalances] = useState([]);
+  const [tokenBalances, setTokenBalances] = useState<number[]>([]);
 
   // Sample RPC address for querying ETH mainnet
   const provider = new ethers.providers.JsonRpcProvider("https://eth-sepolia.public.blastapi.io");
@@ -38,26 +40,29 @@ const RaiseDashboard: NextPage = () => {
     console.log(userReserves.userReserves);
     // await setUserReserves(userReserves.userReserves);
 
-    const token_balances = [];
+    const token_balances: number[] = [];
 
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < userReserves.userReserves.length; j++) {
         // console.log(userReserves.userReserves[i].underlyingAsset);
         // console.log(markets.AaveV3Sepolia.ASSETS[tokens[j]].UNDERLYING);
+        const tokenName: keyof typeof markets.AaveV3Sepolia.ASSETS = tokens[
+          j
+        ] as keyof typeof markets.AaveV3Sepolia.ASSETS;
         if (
           userReserves.userReserves[i].underlyingAsset.toLowerCase() ==
-          markets.AaveV3Sepolia.ASSETS[tokens[j]].UNDERLYING.toLowerCase()
+          markets.AaveV3Sepolia.ASSETS[tokenName].UNDERLYING.toLowerCase()
         ) {
           token_balances.push(
-            userReserves.userReserves[i].scaledATokenBalance /
-              Math.pow(10, markets.AaveV3Sepolia.ASSETS[tokens[j]].decimals),
+            Number(userReserves.userReserves[i].scaledATokenBalance) /
+              Math.pow(10, markets.AaveV3Sepolia.ASSETS[tokenName].decimals as number),
           );
         }
+
+        await setTokenBalances(token_balances);
+        console.log(tokenBalances);
       }
     }
-
-    await setTokenBalances(token_balances);
-    console.log(tokenBalances);
   }
 
   useEffect(() => {
@@ -101,5 +106,4 @@ const RaiseDashboard: NextPage = () => {
     </>
   );
 };
-
 export default RaiseDashboard;

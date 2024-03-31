@@ -73,7 +73,7 @@ app.transaction("/send-ETH", c => {
   return c.send({
     chainId: "eip155:84532",
     to: "0x631088Af5A770Bee50FFA7dd5DC18994616DC1fF",
-    value: parseEther(inputText),
+    value: parseEther(inputText || "0"),
   });
 });
 

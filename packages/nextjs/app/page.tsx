@@ -23,7 +23,11 @@ const Home: NextPage = () => {
   const EURS_SEPOLIA = markets.AaveV3Sepolia.ASSETS.EURS.UNDERLYING;
   const AAVE_SEPOLIA = markets.AaveV3Sepolia.ASSETS.AAVE.UNDERLYING;
 
-  const nameToReserve = {
+  type ReserveType = {
+    [key: string]: string;
+  };
+
+  const nameToReserve: ReserveType = {
     GHO: GHO_SEPOLIA,
     DAI: DAI_SEPOLIA,
     USDC: USDC_SEPOLIA,
@@ -283,7 +287,13 @@ const Home: NextPage = () => {
         </div>
         <button
           className="btn btn-primary w-1/6 mt-5"
-          onClick={() => supplyWithPermit(connectedAddress, nameToReserve[inputSelectedToken], fromInputValue)}
+          onClick={() =>
+            supplyWithPermit(
+              connectedAddress || "0x039b882C4aF8Dc66c906dA6a44c6e2A561BB5223",
+              nameToReserve[inputSelectedToken],
+              fromInputValue,
+            )
+          }
         >
           Contribute
         </button>
