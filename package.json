@@ -46,8 +46,11 @@
   "dependencies": {
     "@aave/contract-helpers": "^1.28.0",
     "@bgd-labs/aave-address-book": "^2.25.0",
+    "@graphprotocol/graph-cli": "^0.69.1",
     "bignumber.js": "^9.1.2",
     "ethers": "5",
+    "frog": "^0.7.16",
+    "hono": "^4.1.5",
     "reflect-metadata": "^0.2.2",
     "web3": "^4.7.0"
   }

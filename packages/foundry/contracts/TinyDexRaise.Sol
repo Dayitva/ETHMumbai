@@ -18,11 +18,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract TinyDexRaise {
     // State Variables
     address public owner;
-    uint256 public raiseAmount;
-    address public raiseToken;
+    address public aaveAddress;
     mapping(address => uint256) public tokenBalances;
-
-    IUniswapV2Router private router = IUniswapV2Router(UNISWAP_V2_ROUTER);
 
     event SwapExecuted(
         address indexed swapExecutor,
@@ -39,10 +36,9 @@ contract TinyDexRaise {
     );
 
     // Check packages/foundry/deploy/Deploy.s.sol
-    constructor(address _owner, uint256 _raiseAmount, address _raiseToken) {
+    constructor(address _owner, address _aaveAddress) {
         owner = _owner;
-        raiseAmount = _raiseAmount;
-        raiseToken = _raiseToken;
+        aaveAddress = _aaveAddress;
     }
 
     // Modifier: used to define a set of rules that must be met before or after a function is executed
