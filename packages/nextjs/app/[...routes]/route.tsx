@@ -55,7 +55,7 @@ app.frame("/", c => {
     intents: [
       <TextInput placeholder="Enter amount to contribute" />,
       <Button.Transaction target="/send-ETH">ETH</Button.Transaction>,
-      <Button.Link href="https://tiny-raise.vercel.com">TinyRaise</Button.Link>,
+      <Button.Link href="https://tinyraise.vercel.app">TinyRaise</Button.Link>,
     ],
   });
 });
